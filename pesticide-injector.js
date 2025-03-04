@@ -1,45 +1,52 @@
-(function(window, document){
-
+(function () {
   'use strict';
 
   // inject the pesticide CSS and JS
-  function toggleAssets(tab) {
-    var injector = '';
+  function toggleAssets() {
+    try {
+      const pesticideCSS = document.getElementById("pesticideCSS");
+      const pesticideJS = document.getElementById("pesticideJS");
+      const pesticideResult = document.getElementById("pesticide-for-chrome-result");
 
-    // logic test if the injected assets exists
-    injector += 'if (document.getElementById("pesticideCSS") && document.getElementById("pesticideJS") ) {';
+      if (pesticideCSS && pesticideJS) {
+        // Remove Pesticide assets if they exist
+        pesticideCSS.remove();
+        pesticideJS.remove();
+        if (pesticideResult) pesticideResult.remove();
+        console.log("Pesticide assets removed.");
+      } else {
+        // Inject Pesticide assets
+        const newPesticideCSS = document.createElement("link");
+        newPesticideCSS.rel = "stylesheet";
+        newPesticideCSS.type = "text/css";
+        newPesticideCSS.href = chrome.runtime.getURL("pesticide.min.css");
+        newPesticideCSS.id = "pesticideCSS";
+        document.head.appendChild(newPesticideCSS);
 
-    //if they exist, remove them
-    injector += 'document.getElementsByTagName("head")[0].removeChild(document.getElementById("pesticideCSS"));';
-    injector += 'document.getElementsByTagName("head")[0].removeChild(document.getElementById("pesticideJS"));';
-    injector += 'document.getElementsByTagName("body")[0].removeChild(document.getElementById("pesticide-for-chrome-result"));';
+        const newPesticideJS = document.createElement("script");
+        newPesticideJS.type = "text/javascript";
+        newPesticideJS.src = chrome.runtime.getURL("pesticide.js");
+        newPesticideJS.id = "pesticideJS";
+        document.head.appendChild(newPesticideJS);
 
-    //if they don't exist, inject them
-    injector += '} else {';
+        const newPesticideResult = document.createElement("div");
+        newPesticideResult.id = "pesticide-for-chrome-result";
+        document.body.appendChild(newPesticideResult);
 
-    injector += 'pesticideCSS = document.createElement("link");';
-    injector += 'pesticideCSS.rel = "stylesheet";';
-    injector += 'pesticideCSS.type = "text/css";';
-    injector += 'pesticideCSS.href = chrome.extension.getURL("/pesticide.min.css");';
-    injector += 'pesticideCSS.id = "pesticideCSS";';
-    injector += 'document.getElementsByTagName("head")[0].appendChild(pesticideCSS);';
-    injector += 'pesticideJS = document.createElement("script");';
-    injector += 'pesticideJS.type = "text/javascript";';
-    injector += 'pesticideJS.src = chrome.extension.getURL("/pesticide.js");';
-    injector += 'pesticideJS.id = "pesticideJS";';
-    injector += 'document.getElementsByTagName("head")[0].appendChild(pesticideJS);';
-    injector += 'pesticideResult = document.createElement("div"),';
-    injector += 'pesticideResult.id = "pesticide-for-chrome-result",';
-    injector += 'document.getElementsByTagName("body")[0].appendChild(pesticideResult)';
-
-    //close logic test
-    injector += '}';
-
-    chrome.tabs.executeScript({code: injector});
+        console.log("Pesticide assets injected.");
+      }
+    } catch (error) {
+      console.error("Error in toggleAssets:", error);
+    }
   }
 
-  chrome.browserAction.onClicked.addListener(function(tab){
-    toggleAssets(tab);
+  // Listen for the action button click
+  chrome.action.onClicked.addListener((tab) => {
+    chrome.scripting
+      .executeScript({
+        target: { tabId: tab.id },
+        function: toggleAssets,
+      })
+      .catch((error) => console.error("Script execution error:", error));
   });
-
-}(window, document));
+})();
